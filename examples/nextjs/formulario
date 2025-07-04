@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de la página Patitas digitales</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light background */
+        }
+        /* Custom styles for better aesthetics */
+        .card {
+            background-color: #ffffff;
+            border-radius: 1rem; /* Rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            max-width: 90%;
+            margin: 2rem auto;
+        }
+        .input-field {
+            border-radius: 0.5rem; /* Rounded input fields */
+            border: 1px solid #cbd5e1; /* Light border */
+            padding: 0.75rem 1rem;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6; /* Blue focus border */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        .btn-primary {
+            background-color: #3b82f6; /* Blue button */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb; /* Darker blue on hover */
+            transform: translateY(-1px);
+        }
+        .qr-container {
+            border: 2px solid #e2e8f0; /* Light border for QR */
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            background-color: #f8fafc; /* Very light background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px; /* Ensure visibility even if QR is small */
+        }
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            display: block; /* Ensures it takes up its own line */
+            object-fit: contain; /* Ensures the image fits within the bounds without distortion */
+        }
+        .btn-secondary {
+            background-color: #cbd5e1; /* Gray button */
+            color: #4a5568;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.1s;
+            margin-top: 1rem;
+        }
+        .btn-secondary:hover {
+            background-color: #a0aec0; /* Darker gray on hover */
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="card w-full md:w-3/4 lg:w-2/3 xl:w-1/2">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">Registro de la página Patitas digitales</h1>
+
+        <form id="registrationForm" class="space-y-6">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo:</label>
+                <input type="text" id="name" name="name" class="input-field" placeholder="Ej: Juan Pérez" required>
+            </div>
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico:</label>
+                <input type="email" id="email" name="email" class="input-field" placeholder="Ej: juan.perez@example.com" required>
+            </div>
+            <div>
+                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Número de Teléfono:</label>
+                <input type="tel" id="phone" name="phone" class="input-field" placeholder="Ej: +56 9 1234 5678" required>
+            </div>
+            <div>
+                <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Dirección (opcional):</label>
+                <input type="text" id="address" name="address" class="input-field" placeholder="Ej: Calle Falsa 123, Santiago">
+            </div>
+            <div>
+                <label for="imageFile" class="block text-sm font-medium text-gray-700 mb-1">Seleccionar Imagen (opcional):</label>
+                <input type="file" id="imageFile" name="imageFile" accept="image/*" class="input-field p-2">
+                <img id="imagePreview" class="image-preview hidden" src="#" alt="Vista previa de la imagen">
+            </div>
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Breve Descripción (opcional):</label>
+                <!-- Added maxlength to help prevent QR code overflow -->
+                <textarea id="description" name="description" rows="3" class="input-field" placeholder="Escribe una breve descripción aquí..." maxlength="200"></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary w-full">Generar Código QR</button>
+        </form>
+
+        <div id="qrCodeContainer" class="mt-8 pt-8 border-t border-gray-200 hidden">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 text-center">Tu Código QR Generado:</h2>
+            <div id="qrcode" class="qr-container"></div>
+            <p class="text-center text-gray-600 text-sm mt-4">Escanea este código QR para ver tus datos.</p>
+            <button id="backToFormBtn" class="btn-secondary">Volver al Formulario</button>
+        </div>
+    </div>
+
+    <!-- QR Code library -->
+    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+    <script>
+        // Event listener for file input change to display image preview
+        document.getElementById('imageFile').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const imagePreview = document.getElementById('imagePreview');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.classList.remove('hidden'); // Show the image preview
+                };
+                reader.readAsDataURL(file); // Read file as Data URL for preview
+            } else {
+                imagePreview.src = '#';
+                imagePreview.classList.add('hidden'); // Hide if no file selected
+            }
+        });
+
+        document.getElementById('registrationForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            // Get form data
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const address = document.getElementById('address').value;
+            const description = document.getElementById('description').value;
+
+            // Construct data string for QR code
+            // Note: QR codes have a limited data capacity. Keep the information concise.
+            // If the data is too long, the QR code generation will fail.
+            let qrData = `
+Nombre: ${name}
+Email: ${email}
+Teléfono: ${phone}
+            `.trim();
+
+            if (address.trim()) { // Only add address if it's not empty
+                qrData += `\nDirección: ${address}`;
+            }
+            if (description.trim()) { // Only add description if it's not empty
+                qrData += `\nDescripción: ${description}`;
+            }
+
+            // Clear previous QR code if any
+            const qrcodeDiv = document.getElementById('qrcode');
+            qrcodeDiv.innerHTML = '';
+
+            try {
+                // Generate QR code
+                new QRCode(qrcodeDiv, {
+                    text: qrData,
+                    width: 256,
+                    height: 256,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+
+                // Hide the form and show the QR code container
+                document.getElementById('registrationForm').classList.add('hidden');
+                document.getElementById('qrCodeContainer').classList.remove('hidden');
+            } catch (error) {
+                console.error("Error al generar el código QR:", error);
+                alert("Error al generar el código QR. La información es demasiado larga. Por favor, intenta con una descripción más corta o menos datos.");
+            }
+        });
+
+        // Event listener for the "Volver al Formulario" button
+        document.getElementById('backToFormBtn').addEventListener('click', function() {
+            // Hide the QR code container and show the form
+            document.getElementById('qrCodeContainer').classList.add('hidden');
+            document.getElementById('registrationForm').classList.remove('hidden');
+            // Optionally clear the form fields here if desired
+            document.getElementById('registrationForm').reset();
+            document.getElementById('imagePreview').src = '#';
+            document.getElementById('imagePreview').classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
